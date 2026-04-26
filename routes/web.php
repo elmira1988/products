@@ -11,6 +11,10 @@ use \App\Http\Controllers\ProductViewController;
 Route::get('/', [ProductViewController::class, 'index'])->name('products.index');
 Route::get('/product/{product}', [ProductViewController::class, 'show'])->name('products.show');
 
+Route::get('/admin/products', function () {
+   // return Inertia::render('Admin/Products/Index');
+});
+
 /*
 Route::get('/', function () {
     return Inertia::render('Welcome', [
