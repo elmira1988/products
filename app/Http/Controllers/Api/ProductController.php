@@ -18,7 +18,7 @@ class ProductController extends Controller
     public function create()
     {
         return Inertia::render('Admin/Products/Form', [
-            'categories' => Category::all()
+
         ]);
     }
 
@@ -34,21 +34,25 @@ class ProductController extends Controller
     public function store(ProductRequest $request): JsonResponse
     {
         $product = Product::create($request->validated());
+        $product->load('category'); // Подгружаем связь, чтобы ресурс её увидел
 
         return response()->json([
-            'message' => 'Товар успешно создан',
-            'product' => $product
-        ], 201); // 201 — код "Создано"
+            'message' => 'Создано',
+            'product' => new ProductResource($product) // Обязательно Resource
+        ], 201);
     }
 
     // PUT /api/products/{product} — Обновление
     public function update(ProductRequest $request, Product $product): JsonResponse
     {
+        // 1. Обновляем данные в базе
         $product->update($request->validated());
 
+        $product->load('category');
+
         return response()->json([
-            'message' => 'Товар обновлен',
-            'product' => $product
+            'message' => 'Товар успешно обновлен',
+            'product' => new ProductResource($product)
         ]);
     }
 
@@ -56,9 +60,6 @@ class ProductController extends Controller
     public function destroy(Product $product): JsonResponse
     {
         $product->delete();
-
-        return response()->json([
-            'message' => 'Товар удален'
-        ]);
+        return response()->json(null, 204);
     }
 }

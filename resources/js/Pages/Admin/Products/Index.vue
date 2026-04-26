@@ -1,7 +1,31 @@
 <script setup>
-import { onMounted } from 'vue';
 import { router, Link, Head } from '@inertiajs/vue3';
 import axios from 'axios';
+import { ref, onMounted } from 'vue'; // Добавь ref сюда
+
+// Состояния для модалки
+const isModalOpen = ref(false);
+const productToDelete = ref(null);
+
+// Открыть модалку
+const confirmDelete = (product) => {
+    productToDelete.value = product;
+    isModalOpen.value = true;
+};
+
+// Выполнить удаление
+const handleObjectDelete = async () => {
+    if (!productToDelete.value) return;
+
+    try {
+        await axios.delete(`/api/products/${productToDelete.value.id}`);
+        isModalOpen.value = false;
+        router.reload({ preserveScroll: true });
+    } catch (e) {
+        alert('Ошибка при удалении');
+    }
+};
+
 
 const props = defineProps({
     products: Object,
@@ -23,6 +47,7 @@ const logout = () => {
 };
 
 // Функция удаления товара
+/*
 const deleteProduct = async (id) => {
     if (!confirm('Удалить этот товар?')) return;
 
@@ -32,10 +57,47 @@ const deleteProduct = async (id) => {
     } catch (e) {
         alert(e.response?.data?.message || 'Ошибка при удалении');
     }
-};
+};*/
 </script>
 
 <template>
+    <Teleport to="body">
+        <div v-if="isModalOpen" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <!-- Затемнение фона -->
+            <div class="absolute inset-0 bg-stone-900/40 backdrop-blur-sm" @click="isModalOpen = false"></div>
+
+            <!-- Контент окна -->
+            <div class="relative bg-white rounded-xl shadow-xl max-w-sm w-full p-8 border border-stone-200">
+                <div class="text-center">
+                    <div class="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                    </div>
+                    <h3 class="text-lg font-semibold text-stone-800 mb-2">Удалить товар?</h3>
+                    <p class="text-sm text-stone-500 mb-8 leading-relaxed">
+                        Вы собираетесь удалить <span class="font-bold text-stone-700">"{{ productToDelete?.name }}"</span>.
+                    </p>
+                </div>
+
+                <div class="flex gap-3">
+                    <button
+                        @click="isModalOpen = false"
+                        class="flex-1 px-4 py-3 text-[10px] uppercase tracking-widest font-bold text-stone-400 hover:text-stone-800 transition"
+                    >
+                        Отмена
+                    </button>
+                    <button
+                        @click="handleObjectDelete"
+                        class="flex-1 px-4 py-3 text-[10px] uppercase tracking-widest font-bold bg-red-500 text-white rounded hover:bg-red-600 shadow-sm transition"
+                    >
+                        Да, удалить
+                    </button>
+                </div>
+            </div>
+        </div>
+    </Teleport>
+
     <Head title="Администрирование товаров" />
 
     <div class="min-h-screen bg-[#F7F5F2] py-3">
@@ -93,29 +155,30 @@ const deleteProduct = async (id) => {
                             Редактировать
                         </Link>
                         <button
-                            @click="deleteProduct(product.id)"
+                            @click="confirmDelete(product)"
                             class="flex-1 py-3 text-[10px] uppercase tracking-widest font-bold border border-transparent bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition"
                         >
                             Удалить
                         </button>
+
                     </div>
                 </div>
             </div>
 
             <!-- ПАГИНАЦИЯ -->
-            <div class="mt-20 flex justify-center items-center gap-2">
+            <div v-if="products?.meta?.links" class="mt-20 flex justify-center items-center gap-2">
                 <Component
-                    :is="link.url ? Link : 'span'"
-                    v-for="link in products.links"
-                    :key="link.label"
-                    :href="link.url"
-                    v-html="link.label"
-                    class="px-5 py-3 text-[10px] font-bold uppercase tracking-widest border transition-all rounded-md"
-                    :class="{
-                        'bg-stone-800 text-white border-stone-800 shadow-sm': link.active,
-                        'text-stone-200 border-transparent pointer-events-none': !link.url,
-                        'text-stone-500 border-stone-200 hover:bg-white hover:border-stone-400': link.url && !link.active
-                    }"
+                :is="link.url ? Link : 'span'"
+                v-for="link in products.meta.links"
+                :key="link.label"
+                :href="link.url"
+                v-html="link.label"
+                class="px-5 py-3 text-[10px] font-bold uppercase tracking-widest border transition-all rounded-md"
+                :class="{
+                'bg-stone-800 text-white border-stone-800 shadow-sm': link.active,
+                'text-stone-200 border-transparent pointer-events-none': !link.url,
+                'text-stone-500 border-stone-200 hover:bg-white hover:border-stone-400': link.url && !link.active
+                }"
                 />
             </div>
         </div>

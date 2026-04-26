@@ -13,7 +13,9 @@ class CategoryController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index() {
+
+    public function index()
+    {
         return CategoryResource::collection(Category::all());
     }
 

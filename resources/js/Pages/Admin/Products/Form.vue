@@ -3,9 +3,10 @@
     import { router, Head, Link } from '@inertiajs/vue3';
 
     const props = defineProps({
-        product: Object,
-        categories: Array,
+        product: Object
     });
+
+    const categories = ref([]);
 
     const form = ref({
         name: props.product?.name || '',
@@ -17,8 +18,18 @@
     const processing = ref(false);
     const errors = ref({});
 
-    onMounted(() => {
-        if (!localStorage.getItem('admin_token')) router.visit('/login');
+    onMounted(async () => {
+        if (!localStorage.getItem('admin_token')) {
+            router.visit('/login');
+            return;
+        }
+
+        try {
+            const response = await axios.get('/api/categories');
+            categories.value = response.data.data || response.data;
+        } catch (e) {
+            console.error("Не удалось загрузить категории", e);
+        }
     });
 
     const submit = async () => {
@@ -37,11 +48,6 @@
             // После успеха — редирект в список через Inertia
             router.visit('/admin/products');
         } catch (e) {
-            if (e.response?.status === 422) {
-                errors.value = e.response.data.errors;
-            } else {
-                alert('Произошла ошибка при сохранении');
-            }
         } finally {
             processing.value = false;
         }
@@ -100,7 +106,7 @@
                         <div class="pt-6">
                             <button type="submit" :disabled="processing"
                                     class="w-full bg-stone-800 text-stone-50 py-4 rounded text-[10px] uppercase tracking-[0.2em] font-bold hover:bg-stone-700 transition disabled:opacity-50 shadow-md">
-                                {{ processing ? 'Сохранение...' : (product ? 'Обновить товар' : 'Создать товар') }}
+                                {{ processing ? 'Сохранение...' : (product ? 'Сохранить изменения' : 'Создать товар') }}
                             </button>
                         </div>
                     </form>
