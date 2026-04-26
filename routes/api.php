@@ -3,15 +3,18 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\ProductController;
 
 Route::post('/login', [AuthController::class, 'login']);
 
 // Защищенные маршруты
 Route::middleware('auth:sanctum')->group(function () {
-    Route::get('/admin/products', function () {
-        return response()->json(['message' => 'Welcome to Dashboard']);
-    });
+    Route::post('/products', [ProductController::class, 'store']);
+    Route::put('/products/{product}', [ProductController::class, 'update']);
+    Route::delete('/products/{product}', [ProductController::class, 'destroy']);
 });
+
+
 
 Route::get('/user', function (Request $request) {
     return $request->user();

@@ -5,16 +5,6 @@ import { createInertiaApp } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createApp, h } from 'vue';
 import { ZiggyVue } from '../../vendor/tightenco/ziggy';
-import axios from 'axios';
-
-// Настройка для всех запросов Axios
-axios.interceptors.request.use(config => {
-    const token = localStorage.getItem(' admin_token');
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-});
 
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
